@@ -1,7 +1,7 @@
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { getMetadataStorage, validateSync } from 'class-validator';
-import { DatabaseVariables } from './schemas/database.schema';
-import { EnvironmentVariables } from './schemas/app.schema';
+import { DatabaseVariables } from './database/schema';
+import { EnvironmentVariables } from './app/schema';
 
 const schemas: ClassConstructor<object>[] = [
     EnvironmentVariables,
