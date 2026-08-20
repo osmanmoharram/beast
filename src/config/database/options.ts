@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataSourceOptions.js';
+import { PluralNamingStrategy } from './naming.strategy';
 
 type DatabaseOptions = PostgresDataSourceOptions & {
     autoLoadEntities?: TypeOrmModuleOptions['autoLoadEntities'];
@@ -29,6 +30,7 @@ export default function databaseOptions(
         autoLoadEntities: config.getOrThrow<boolean>(
             'TYPEORM_AUTOLOAD_ENTITIES',
         ),
+        namingStrategy: new PluralNamingStrategy(),
         synchronize: config.getOrThrow<boolean>('TYPEORM_SYNCHRONIZE'),
     };
 }
