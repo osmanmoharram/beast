@@ -1,8 +1,14 @@
 import { JwtService } from '@nestjs/jwt';
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+    ConflictException,
+    Injectable,
+    UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { LoginUserDto } from '../users/dto/login-user.dto';
+import bcrypt from 'bcrypt';
 
 export type JwtPayload = {
     sub: number;
@@ -28,5 +34,23 @@ export class AuthService {
         const token = await this.jwtService.signAsync(payload);
 
         return new AuthResponseDto(user, token);
+    }
+
+    async login(loginUserDto: LoginUserDto): Promise<AuthResponseDto> {
+        const user = await this.usersService.findByEmail(loginUserDto.email);
+
+        if (
+            !user ||
+            !(await bcrypt.compare(loginUserDto.password, user.password))
+        ) {
+            throw new UnauthorizedException('Invalid email or password');
+        }
+
+        const payload: JwtPayload = { sub: user.id, email: user.email };
+
+        return new AuthResponseDto(
+            user,
+            await this.jwtService.signAsync(payload),
+        );
     }
 }
