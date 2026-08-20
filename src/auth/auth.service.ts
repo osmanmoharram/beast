@@ -1,14 +1,19 @@
-import { JwtModule } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { RegisteredUser, UsersService } from '../users/users.service';
+import { UsersService } from '../users/users.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
+
+export type JwtPayload = {
+    sub: number;
+    email: string;
+};
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly usersService: UsersService,
-        private readonly jwtModule: JwtModule,
+        private readonly jwtService: JwtService,
     ) {}
 
     async register(createUserDto: CreateUserDto): Promise<RegisteredUser> {
@@ -18,6 +23,15 @@ export class AuthService {
 
         const user = await this.usersService.create(createUserDto);
 
-        return new AuthResponseDto(user);
+        const payload: JwtPayload = { sub: user.id, email: user.email };
+
+        const token = this.jwtService.signAsync(payload, this.);
+
+        return new AuthResponseDto(
+            user,
+            await this.jwtService.signAsync({
+                sub: user.id,
+            }),
+        );
     }
 }
