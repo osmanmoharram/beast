@@ -1,7 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import {
     ConflictException,
-    ExecutionContext,
     Injectable,
     UnauthorizedException,
 } from '@nestjs/common';
@@ -9,7 +8,6 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginUserDto } from '../users/dto/login-user.dto';
-import { Request } from 'express';
 import bcrypt from 'bcrypt';
 
 export type JwtPayload = {
@@ -48,10 +46,7 @@ export class AuthService {
             throw new UnauthorizedException('Invalid email or password');
         }
 
-        const payload: JwtPayload = {
-            sub: user.id,
-            email: user.email,
-        };
+        const payload: JwtPayload = { sub: user.id, email: user.email };
 
         return new AuthResponseDto(
             user,
