@@ -1,17 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { QueryFailedError, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 
-const SALT_ROUNDS = 10;
+const BCRYPT_ROUNDS = 10;
+const MYSQL_DUPLICATE_ENTRY = 'ER_DUP_ENTRY';
 
-export interface RegisteredUser {
-    user: Omit<User, 'password'>;
-    accessToken: string;
-}
+// export interface RegisteredUser {
+//     user: Omit<User, 'password'>;
+//     accessToken: string;
+// }
 
 @Injectable()
 export class UsersService {
@@ -21,22 +22,32 @@ export class UsersService {
         private readonly jwtService: JwtService,
     ) {}
 
-    async create(createUserDto: CreateUserDto): Promise<RegisteredUser> {
-        const password = await bcrypt.hash(createUserDto.password, SALT_ROUNDS);
-
-        const saved = await this.usersRepository.save(
-            this.usersRepository.create({ ...createUserDto, password }),
-        );
-
-        const accessToken = await this.jwtService.signAsync({
-            sub: saved.id,
-            username: saved.username,
+    async create(createUserDto: CreateUserDto): Promise<User> {
+        const user = this.usersRepository.create({
+            ...createUserDto,
+            password: await bcrypt.hash(createUserDto.password, BCRYPT_ROUNDS),
         });
 
-        // The hash never leaves the service.
-        const { password: hashed, ...user } = saved;
-        void hashed;
+        try {
+            return await this.usersRepository.save(user);
+        } catch (error) {
+            if (this.isDuplicateEntry(error)) {
+                throw new ConflictException('Email is already registered');
+            }
 
-        return { user, accessToken };
+            throw error;
+        }
+    }
+
+    async existsByEmail(email: CreateUserDto['email']) {
+        return await this.usersRepository.findOneBy({ email });
+    }
+
+    private isDuplicateEntry(error: unknown): boolean {
+        return (
+            error instanceof QueryFailedError &&
+            (error.driverError as { code?: string })?.code ===
+                MYSQL_DUPLICATE_ENTRY
+        );
     }
 }
