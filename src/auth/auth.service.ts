@@ -16,7 +16,7 @@ export class AuthService {
         private readonly jwtService: JwtService,
     ) {}
 
-    async register(createUserDto: CreateUserDto): Promise<RegisteredUser> {
+    async register(createUserDto: CreateUserDto): Promise<AuthResponseDto> {
         if (await this.usersService.existsByEmail(createUserDto.email)) {
             throw new ConflictException('Email is already registered');
         }
@@ -25,13 +25,8 @@ export class AuthService {
 
         const payload: JwtPayload = { sub: user.id, email: user.email };
 
-        const token = this.jwtService.signAsync(payload, this.);
+        const token = await this.jwtService.signAsync(payload);
 
-        return new AuthResponseDto(
-            user,
-            await this.jwtService.signAsync({
-                sub: user.id,
-            }),
-        );
+        return new AuthResponseDto(user, token);
     }
 }

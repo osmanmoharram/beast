@@ -4,10 +4,10 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
 
 const BCRYPT_ROUNDS = 10;
-const MYSQL_DUPLICATE_ENTRY = 'ER_DUP_ENTRY';
+// SQLSTATE 23505: unique_violation. Postgres reports it on the email index.
+const POSTGRES_UNIQUE_VIOLATION = '23505';
 
 // export interface RegisteredUser {
 //     user: Omit<User, 'password'>;
@@ -38,15 +38,15 @@ export class UsersService {
         }
     }
 
-    async existsByEmail(email: CreateUserDto['email']) {
-        return await this.usersRepository.findOneBy({ email });
+    async existsByEmail(email: CreateUserDto['email']): Promise<boolean> {
+        return await this.usersRepository.existsBy({ email });
     }
 
     private isDuplicateEntry(error: unknown): boolean {
         return (
             error instanceof QueryFailedError &&
             (error.driverError as { code?: string })?.code ===
-                MYSQL_DUPLICATE_ENTRY
+                POSTGRES_UNIQUE_VIOLATION
         );
     }
 }
