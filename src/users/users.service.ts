@@ -38,6 +38,10 @@ export class UsersService {
         }
     }
 
+    async findByEmail(email: CreateUserDto['email']): Promise<User | null> {
+        return this.usersRepository.findOneBy({ email });
+    }
+
     async existsByEmail(email: CreateUserDto['email']): Promise<boolean> {
         return await this.usersRepository.existsBy({ email });
     }
