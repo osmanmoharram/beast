@@ -9,11 +9,7 @@ import { UsersService } from '../users/users.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginUserDto } from '../users/dto/login-user.dto';
 import bcrypt from 'bcrypt';
-
-export type JwtPayload = {
-    sub: number;
-    email: string;
-};
+import { JwtPayload } from './types/jwt.type';
 
 @Injectable()
 export class AuthService {
