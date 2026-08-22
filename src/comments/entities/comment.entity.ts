@@ -3,32 +3,31 @@ import {
     CreateDateColumn,
     Entity,
     ManyToOne,
-    OneToMany,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import { Post } from '../../posts/entities/post.entity';
 import { User } from '../../users/entities/user.entity';
-import { Comment } from '../../comments/entities/comment.entity';
 
 @Entity()
-export class Post {
+export class Comment {
     @PrimaryGeneratedColumn()
     id!: number;
 
     @Column()
-    title!: string;
-
-    @Column()
     body!: string;
 
-    @ManyToOne(() => User, (user) => user.posts, {
+    @ManyToOne(() => User, (user) => user.comments, {
         nullable: false,
         onDelete: 'CASCADE',
     })
     author!: User;
 
-    @OneToMany(() => Comment, (comment) => comment.post)
-    comments!: Comment[];
+    @ManyToOne(() => Post, (post) => post.comments, {
+        nullable: false,
+        onDelete: 'CASCADE',
+    })
+    post!: Post;
 
     @CreateDateColumn()
     createdAt!: Date;

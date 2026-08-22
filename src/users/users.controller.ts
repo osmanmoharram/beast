@@ -19,11 +19,11 @@ import {
 export class UsersController {
     constructor(private readonly usersService: UsersService) {}
 
-    @Get()
-    @HttpCode(HttpStatus.OK)
-    findAll(): Promise<User[]> {
-        return this.usersService.findAll();
-    }
+    // @Get()
+    // @HttpCode(HttpStatus.OK)
+    // findAll(): Promise<User[]> {
+    //     return this.usersService.findAll();
+    // }
 
     // @Post()
     // @HttpCode(HttpStatus.CREATED)
