@@ -13,6 +13,8 @@ const POST_SELECT: FindOptionsSelect<Post> = {
     body: true,
     author: { id: true, username: true, email: true },
     comments: { id: true, body: true },
+    createdAt: true,
+    updatedAt: true,
 };
 
 @Injectable()

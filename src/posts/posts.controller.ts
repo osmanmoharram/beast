@@ -53,7 +53,7 @@ export class PostsController {
     }
 
     @Delete(':id')
-    @HttpCode(HttpStatus.NO_CONTENT)
+    @HttpCode(HttpStatus.OK)
     remove(@Param('id', ParseIntPipe) id: number): Promise<SuccessResponse> {
         return this.postsService.remove(id);
     }
