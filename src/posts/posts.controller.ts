@@ -1,5 +1,6 @@
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type JwtPayload } from '../auth/types/jwt.type';
+import { SuccessResponse } from '../common/types/success-response';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostEntity } from './entities/post.entity';
@@ -47,13 +48,13 @@ export class PostsController {
     update(
         @Param('id', ParseIntPipe) id: number,
         @Body() updatePostDto: UpdatePostDto,
-    ): Promise<PostEntity> {
+    ): Promise<SuccessResponse> {
         return this.postsService.update(id, updatePostDto);
     }
 
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
-    remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    remove(@Param('id', ParseIntPipe) id: number): Promise<SuccessResponse> {
         return this.postsService.remove(id);
     }
 }

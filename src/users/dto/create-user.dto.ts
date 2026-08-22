@@ -1,5 +1,6 @@
 import { IsEmail, IsNotEmpty, IsString, Length } from 'class-validator';
-import { Match } from '../decorators/match.decorator';
+import { ConfirmPassword } from '../validators/confirm-password.validator';
+import { IsEmailUnique } from '../validators/is-email-unique.validator';
 
 export class CreateUserDto {
     @IsNotEmpty()
@@ -9,15 +10,16 @@ export class CreateUserDto {
 
     @IsNotEmpty()
     @IsEmail()
+    @IsEmailUnique()
     email!: string;
 
-    @IsNotEmpty()
     @IsString()
+    @IsNotEmpty()
     @Length(3, 50)
     password!: string;
 
-    @IsNotEmpty()
     @IsString()
-    @Match('password')
+    @IsNotEmpty()
+    @ConfirmPassword()
     confirm!: string;
 }

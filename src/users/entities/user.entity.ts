@@ -1,6 +1,14 @@
 import { Exclude } from 'class-transformer';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from 'typeorm';
 import { Post } from '../../posts/entities/post.entity';
+import { Comment } from '../../comments/entities/comment.entity';
 
 @Entity()
 export class User {
@@ -13,11 +21,19 @@ export class User {
     @Column({ unique: true })
     email!: string;
 
-    // Excluded from every response ClassSerializerInterceptor touches.
     @Exclude()
     @Column()
     password!: string;
 
     @OneToMany(() => Post, (post) => post.author)
     posts!: Post[];
+
+    @OneToMany(() => Comment, (comment) => comment.author)
+    comments!: Comment[];
+
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    updatedAt!: Date;
 }
