@@ -1,4 +1,13 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateCommentDto } from './create-comment.dto';
+import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 
-export class UpdateCommentDto extends PartialType(CreateCommentDto) {}
+/**
+ * Deliberately not a PartialType(CreateCommentDto): the post a comment belongs
+ * to comes from the URL and must never be reassignable through the body.
+ */
+export class UpdateCommentDto {
+    @IsOptional()
+    @IsNotEmpty()
+    @IsString()
+    @Length(3, 500)
+    body?: string;
+}

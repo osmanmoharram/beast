@@ -1,7 +1,6 @@
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { CommentsService } from './comments.service';
 import {
-    Controller,
     Get,
     HttpStatus,
     HttpCode,
@@ -9,6 +8,9 @@ import {
     Patch,
     Delete,
     Body,
+    Param,
+    ParseIntPipe,
+    Controller,
 } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -16,37 +18,42 @@ import { type JwtPayload } from '../auth/types/jwt.type';
 import { Comment } from './entities/comment.entity';
 import { SuccessResponse } from '../common/types/success-response';
 
-@Controller('comments')
+@Controller('posts/:postId/comments')
 export class CommentsController {
     constructor(private readonly commentsService: CommentsService) {}
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    findAll() {
-        return this.commentsService.findAll();
+    findAll(@Param('postId', ParseIntPipe) postId: number): Promise<Comment[]> {
+        return this.commentsService.findAllForPost(postId);
     }
 
     @Post()
     @HttpCode(HttpStatus.CREATED)
     create(
+        @Param('postId', ParseIntPipe) postId: number,
         @Body() createCommentDto: CreateCommentDto,
         @CurrentUser() user: JwtPayload,
     ): Promise<Comment> {
-        return this.commentsService.create(createCommentDto, user.sub);
+        return this.commentsService.create(postId, createCommentDto, user.sub);
     }
 
-    @Patch()
+    @Patch(':id')
     @HttpCode(HttpStatus.OK)
     update(
-        id: Comment['id'],
+        @Param('postId', ParseIntPipe) postId: number,
+        @Param('id', ParseIntPipe) id: number,
         @Body() updateCommentDto: UpdateCommentDto,
     ): Promise<SuccessResponse> {
-        return this.commentsService.update(id, updateCommentDto);
+        return this.commentsService.update(postId, id, updateCommentDto);
     }
 
-    @Delete()
+    @Delete(':id')
     @HttpCode(HttpStatus.OK)
-    remove(id: Comment['id']): Promise<SuccessResponse> {
-        return this.commentsService.remove(id);
+    remove(
+        @Param('postId', ParseIntPipe) postId: number,
+        @Param('id', ParseIntPipe) id: number,
+    ): Promise<SuccessResponse> {
+        return this.commentsService.remove(postId, id);
     }
 }

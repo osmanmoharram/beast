@@ -6,7 +6,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { cors: true });
     // Lets class-validator resolve constraint classes through Nest's DI, which
-    // is what allows IsPostExistsConstraint to inject the Post repository.
+    // is what allows IsEmailUniqueConstraint to inject the User repository.
     useContainer(app.select(AppModule), { fallbackOnErrors: true });
     app.useGlobalPipes(
         new ValidationPipe({ transform: true, whitelist: true }),
