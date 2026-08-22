@@ -7,9 +7,9 @@ import {
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
-import { LoginUserDto } from '../users/dto/login-user.dto';
 import bcrypt from 'bcrypt';
 import { JwtPayload } from './types/jwt.type';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -32,12 +32,12 @@ export class AuthService {
         return new AuthResponseDto(user, token);
     }
 
-    async login(loginUserDto: LoginUserDto): Promise<AuthResponseDto> {
-        const user = await this.usersService.findByEmail(loginUserDto.email);
+    async login(loginDto: LoginDto): Promise<AuthResponseDto> {
+        const user = await this.usersService.findByEmail(loginDto.email);
 
         if (
             !user ||
-            !(await bcrypt.compare(loginUserDto.password, user.password))
+            !(await bcrypt.compare(loginDto.password, user.password))
         ) {
             throw new UnauthorizedException('Invalid email or password');
         }
