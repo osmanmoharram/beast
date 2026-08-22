@@ -41,30 +41,32 @@ export class UsersService {
         }
     }
 
-    async findOne(id: User['id']): Promise<User | null> {
-        return this.usersRepository.findOneBy({ id });
+    async findOneOrFail(id: User['id']): Promise<User> {
+        const user = await this.findOne(id);
+
+        if (user === null) {
+            throw new NotFoundException(`User ${id} not found`);
+        }
+
+        return user;
     }
 
     async update(id: User['id'], updateUserDto: UpdateUserDto): Promise<User> {
         const user = await this.findOneOrFail(id);
 
-        const updated = { ...user, ...updateUserDto };
+        // `password` has to be hashed and `confirm` is not a column, so both
+        // are kept out of the assignment rather than written to the entity raw.
+        const { confirm, password, ...rest } = updateUserDto;
+        void confirm;
 
-        // Assigned field by field rather than with Object.assign so `confirm`,
-        // which is not a column, never reaches the entity.
-        if (updateUserDto.username !== undefined) {
-            user.username = updateUserDto.username;
-        }
+        // Mutating the loaded entity rather than spreading into a new object
+        // literal: save() hands back whatever shape it was given, and
+        // ClassSerializerInterceptor only applies @Exclude() to real User
+        // instances, so a literal would leak the password hash in the response.
+        Object.assign(user, rest);
 
-        if (updateUserDto.email !== undefined) {
-            user.email = updateUserDto.email;
-        }
-
-        if (updateUserDto.password !== undefined) {
-            user.password = await bcrypt.hash(
-                updateUserDto.password,
-                BCRYPT_ROUNDS,
-            );
+        if (password !== undefined) {
+            user.password = await bcrypt.hash(password, BCRYPT_ROUNDS);
         }
 
         try {
@@ -86,22 +88,21 @@ export class UsersService {
         }
     }
 
-    async findOneOrFail(id: User['id']): Promise<User> {
-        const user = await this.findOne(id);
-
-        if (user === null) {
-            throw new NotFoundException(`User ${id} not found`);
-        }
-
-        return user;
-    }
-
     async findByEmail(email: CreateUserDto['email']): Promise<User | null> {
         return this.usersRepository.findOneBy({ email });
     }
 
     async existsByEmail(email: CreateUserDto['email']): Promise<boolean> {
         return await this.usersRepository.existsBy({ email });
+    }
+
+    private async findOne(id: User['id']): Promise<User | null> {
+        return this.usersRepository.findOne({
+            where: { id },
+            relations: {
+                posts: true,
+            },
+        });
     }
 
     private isDuplicateEntry(error: unknown): boolean {
@@ -111,4 +112,16 @@ export class UsersService {
                 POSTGRES_UNIQUE_VIOLATION
         );
     }
+
+    // add comments
+
+    // add views
+
+    // add policies
+
+    // add profiles
+
+    // upload images
+
+    // make user names start with @
 }
