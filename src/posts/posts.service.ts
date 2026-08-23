@@ -1,8 +1,14 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { FindOptionsSelect, Repository } from 'typeorm';
+import {
+    FindOptionsSelect,
+    FindOptionsWhere,
+    ILike,
+    Repository,
+} from 'typeorm';
 import { Post } from './entities/post.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
+import { SearchPostsDto } from './dto/search-posts.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { User } from '../users/entities/user.entity';
 import { SuccessResponse } from '../common/types/success-response';
@@ -24,8 +30,9 @@ export class PostsService {
         private readonly postsRepository: Repository<Post>,
     ) {}
 
-    async findAll(): Promise<Post[]> {
+    async findAll({ q }: SearchPostsDto = {}): Promise<Post[]> {
         return await this.postsRepository.find({
+            where: this.searchCriteria(q),
             relations: {
                 author: true,
                 comments: true,
@@ -86,6 +93,23 @@ export class PostsService {
             code: HttpStatus.OK,
             message: `Post deleted successfully`,
         };
+    }
+
+    /**
+     * An array of conditions is an OR, so a term matches a post by its title
+     * or its body. Undefined when no term was given, which leaves find()
+     * unfiltered rather than searching for an empty string.
+     */
+    private searchCriteria(q?: string): FindOptionsWhere<Post>[] | undefined {
+        if (q === undefined) {
+            return undefined;
+        }
+
+        // % and _ are LIKE wildcards, so they are escaped rather than passed
+        // through: searching for "100%" should not match every row.
+        const term = `%${q.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
+
+        return [{ title: ILike(term) }, { body: ILike(term) }];
     }
 
     private async findOne(id: Post['id']): Promise<Post | null> {

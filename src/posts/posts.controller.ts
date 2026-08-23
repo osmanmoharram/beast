@@ -2,6 +2,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type JwtPayload } from '../auth/types/jwt.type';
 import { SuccessResponse } from '../common/types/success-response';
 import { CreatePostDto } from './dto/create-post.dto';
+import { SearchPostsDto } from './dto/search-posts.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostEntity } from './entities/post.entity';
 import { PostsService } from './posts.service';
@@ -16,6 +17,7 @@ import {
     ParseIntPipe,
     Patch,
     Post,
+    Query,
 } from '@nestjs/common';
 
 @Controller('posts')
@@ -24,8 +26,8 @@ export class PostsController {
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    findAll(): Promise<PostEntity[]> {
-        return this.postsService.findAll();
+    findAll(@Query() searchPostsDto: SearchPostsDto): Promise<PostEntity[]> {
+        return this.postsService.findAll(searchPostsDto);
     }
 
     @Post()
