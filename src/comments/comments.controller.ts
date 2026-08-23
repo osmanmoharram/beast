@@ -13,6 +13,7 @@ import {
     Controller,
 } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { Owns } from '../common/policies/owns.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type JwtPayload } from '../auth/types/jwt.type';
 import { Comment } from './entities/comment.entity';
@@ -40,6 +41,7 @@ export class CommentsController {
 
     @Patch(':id')
     @HttpCode(HttpStatus.OK)
+    @Owns(Comment, 'author.id')
     update(
         @Param('postId', ParseIntPipe) postId: number,
         @Param('id', ParseIntPipe) id: number,
@@ -50,6 +52,7 @@ export class CommentsController {
 
     @Delete(':id')
     @HttpCode(HttpStatus.OK)
+    @Owns(Comment, 'author.id')
     remove(
         @Param('postId', ParseIntPipe) postId: number,
         @Param('id', ParseIntPipe) id: number,

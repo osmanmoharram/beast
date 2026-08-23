@@ -4,10 +4,11 @@ import { CommentsService } from './comments.service';
 import { Comment } from './entities/comment.entity';
 import { Post } from '../posts/entities/post.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PolicyGuard } from '../common/policies/policy.guard';
 
 @Module({
     imports: [TypeOrmModule.forFeature([Comment, Post])],
     controllers: [CommentsController],
-    providers: [CommentsService],
+    providers: [CommentsService, PolicyGuard],
 })
 export class CommentsModule {}

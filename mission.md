@@ -1,7 +1,3 @@
-### search
-
-### policies
-
 ### views
 
 ### upload avatar
