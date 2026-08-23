@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
     Column,
     CreateDateColumn,
@@ -19,8 +20,23 @@ export class Profile {
     @Column({ length: 100 })
     displayName!: string;
 
+    /**
+     * Filename of the uploaded picture, not a URL and not a path: the
+     * directory it sits in and the origin it is served from are deployment
+     * details, and baking either into a row would break every avatar the day
+     * one of them changes. Excluded because a client has no use for the name
+     * on its own — it reads `avatarUrl` instead.
+     */
+    @Exclude()
     @Column({ type: 'varchar', nullable: true })
     avatar?: string | null;
+
+    /**
+     * Where to actually fetch the picture, filled in by AvatarsService rather
+     * than stored: the uploaded file when there is one, a Gravatar generated
+     * from the account otherwise. Undecorated, so TypeORM leaves it alone.
+     */
+    avatarUrl?: string;
 
     /**
      * The `pg` driver hands `date` columns back as 'YYYY-MM-DD' strings, so the

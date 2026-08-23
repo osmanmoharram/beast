@@ -100,8 +100,16 @@ export class UsersService {
         }
     }
 
+    /**
+     * Carries the profile along because this is what /auth/login answers with,
+     * and that reply has to hold the same user shape register's does — one of
+     * which is built from create(), whose cascade leaves the profile attached.
+     */
     async findByEmail(email: CreateUserDto['email']): Promise<User | null> {
-        return this.usersRepository.findOneBy({ email });
+        return this.usersRepository.findOne({
+            where: { email },
+            relations: { profile: true },
+        });
     }
 
     async existsByEmail(email: CreateUserDto['email']): Promise<boolean> {

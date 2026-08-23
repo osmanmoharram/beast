@@ -5,12 +5,16 @@ import { AuthService } from './auth.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
+import { ProfilesModule } from '../profiles/profiles.module';
 import jwtOptions from '../config/jwt/options';
 import { AuthGuard } from './guards/auth.guard';
 
 @Module({
     imports: [
         UsersModule,
+        // For AvatarsService: the user in an auth reply brings its profile
+        // along, and a profile without its avatar resolved is half a profile.
+        ProfilesModule,
         JwtModule.registerAsync({
             inject: [ConfigService],
             useFactory: jwtOptions,

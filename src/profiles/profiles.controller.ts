@@ -1,16 +1,24 @@
 import {
     Body,
     Controller,
+    Delete,
+    FileTypeValidator,
     Get,
     HttpCode,
     HttpStatus,
     Param,
+    ParseFilePipe,
     ParseIntPipe,
     Patch,
+    Post,
+    UploadedFile,
+    UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type JwtPayload } from '../auth/types/jwt.type';
 import { SuccessResponse } from '../common/types/success-response';
+import { AVATAR_MIME_TYPES } from './avatars.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Profile } from './entities/profile.entity';
 import { ProfilesService } from './profiles.service';
@@ -36,6 +44,42 @@ export class ProfilesController {
     @HttpCode(HttpStatus.OK)
     findOwn(@CurrentUser() user: JwtPayload): Promise<Profile> {
         return this.profilesService.findOwnOrFail(user.sub);
+    }
+
+    /**
+     * Own profile only, like /profiles/me: an avatar is the one thing on a
+     * profile a client sets by uploading, and it sets it on its own.
+     *
+     * Size and count limits come from the multer options the module registers;
+     * the type is checked here, against the file's magic numbers rather than
+     * the Content-Type the client claimed. `overrideMimeType` then writes the
+     * detected type back onto the file, which is what AvatarsService reads to
+     * pick an extension.
+     */
+    @Post('me/avatar')
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(FileInterceptor('avatar'))
+    uploadOwnAvatar(
+        @CurrentUser() user: JwtPayload,
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new FileTypeValidator({
+                        fileType: AVATAR_MIME_TYPES,
+                        overrideMimeType: true,
+                    }),
+                ],
+            }),
+        )
+        file: Express.Multer.File,
+    ): Promise<Profile> {
+        return this.profilesService.uploadOwnAvatar(user.sub, file);
+    }
+
+    @Delete('me/avatar')
+    @HttpCode(HttpStatus.OK)
+    removeOwnAvatar(@CurrentUser() user: JwtPayload): Promise<Profile> {
+        return this.profilesService.removeOwnAvatar(user.sub);
     }
 
     @Get(':id')
