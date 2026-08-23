@@ -11,12 +11,15 @@ import {
     Param,
     ParseIntPipe,
     Controller,
+    Query,
 } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type JwtPayload } from '../auth/types/jwt.type';
 import { Comment } from './entities/comment.entity';
 import { SuccessResponse } from '../common/types/success-response';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { Paginated } from '../common/types/paginated';
 
 @Controller('posts/:postId/comments')
 export class CommentsController {
@@ -24,8 +27,11 @@ export class CommentsController {
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    findAll(@Param('postId', ParseIntPipe) postId: number): Promise<Comment[]> {
-        return this.commentsService.findAllForPost(postId);
+    findAll(
+        @Param('postId', ParseIntPipe) postId: number,
+        @Query() paginationDto: PaginationDto,
+    ): Promise<Paginated<Comment>> {
+        return this.commentsService.findAllForPost(postId, paginationDto);
     }
 
     @Post()

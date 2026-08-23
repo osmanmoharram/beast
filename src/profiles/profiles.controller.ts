@@ -11,6 +11,7 @@ import {
     ParseIntPipe,
     Patch,
     Post,
+    Query,
     UploadedFile,
     UseInterceptors,
 } from '@nestjs/common';
@@ -18,6 +19,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type JwtPayload } from '../auth/types/jwt.type';
 import { SuccessResponse } from '../common/types/success-response';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { Paginated } from '../common/types/paginated';
 import { AVATAR_MIME_TYPES } from './avatars.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Profile } from './entities/profile.entity';
@@ -34,8 +37,10 @@ export class ProfilesController {
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    findAll(): Promise<Profile[]> {
-        return this.profilesService.findAll();
+    findAll(
+        @Query() paginationDto: PaginationDto,
+    ): Promise<Paginated<Profile>> {
+        return this.profilesService.findAll(paginationDto);
     }
 
     // Declared above ':id' on purpose. Nest matches in declaration order, and
