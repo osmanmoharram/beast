@@ -2,6 +2,7 @@ import { Owns } from '../common/policies/owns.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type JwtPayload } from '../auth/types/jwt.type';
 import { SuccessResponse } from '../common/types/success-response';
+import { Paginated } from '../common/types/paginated';
 import { CreatePostDto } from './dto/create-post.dto';
 import { SearchPostsDto } from './dto/search-posts.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -27,7 +28,9 @@ export class PostsController {
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    findAll(@Query() searchPostsDto: SearchPostsDto): Promise<PostEntity[]> {
+    findAll(
+        @Query() searchPostsDto: SearchPostsDto,
+    ): Promise<Paginated<PostEntity>> {
         return this.postsService.findAll(searchPostsDto);
     }
 

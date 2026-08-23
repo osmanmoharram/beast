@@ -1,12 +1,14 @@
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { FindOptionsSelect, Repository } from 'typeorm';
+import { FindOptionsOrder, FindOptionsSelect, Repository } from 'typeorm';
 import { Comment } from './entities/comment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { User } from '../users/entities/user.entity';
 import { Post } from '../posts/entities/post.entity';
 import { SuccessResponse } from '../common/types/success-response';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { Paginated, paginate, toSkipTake } from '../common/types/paginated';
 
 const COMMENT_SELECT: FindOptionsSelect<Comment> = {
     id: true,
@@ -14,6 +16,13 @@ const COMMENT_SELECT: FindOptionsSelect<Comment> = {
     author: { id: true, username: true, email: true },
     createdAt: true,
     updatedAt: true,
+};
+
+// Oldest first: a comment thread reads in the order it was written, unlike a
+// post feed. The id breaks ties so pages cannot overlap.
+const COMMENT_ORDER: FindOptionsOrder<Comment> = {
+    createdAt: 'ASC',
+    id: 'ASC',
 };
 
 @Injectable()
@@ -25,14 +34,26 @@ export class CommentsService {
         private readonly postsRepository: Repository<Post>,
     ) {}
 
-    async findAllForPost(postId: Post['id']): Promise<Comment[]> {
+    async findAllForPost(
+        postId: Post['id'],
+        paginationDto: PaginationDto,
+    ): Promise<Paginated<Comment>> {
         await this.assertPostExists(postId);
 
-        return await this.commentsRepository.find({
-            where: { post: { id: postId } },
-            relations: { author: true },
-            select: COMMENT_SELECT,
-        });
+        const where = { post: { id: postId } };
+
+        const result = await Promise.all([
+            this.commentsRepository.find({
+                where,
+                relations: { author: true },
+                select: COMMENT_SELECT,
+                order: COMMENT_ORDER,
+                ...toSkipTake(paginationDto),
+            }),
+            this.commentsRepository.count({ where }),
+        ]);
+
+        return paginate(result, paginationDto);
     }
 
     async create(

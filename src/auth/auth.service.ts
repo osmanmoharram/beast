@@ -1,9 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
-import {
-    ConflictException,
-    Injectable,
-    UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
@@ -21,11 +17,13 @@ export class AuthService {
         private readonly avatarsService: AvatarsService,
     ) {}
 
+    /**
+     * No pre-flight uniqueness check: @IsEmailUnique on the DTO has already
+     * run by the time this is entered, and the unique constraint behind
+     * create() catches the race the validator cannot. A third query asking
+     * the same question only added a round trip to every registration.
+     */
     async register(createUserDto: CreateUserDto): Promise<AuthResponseDto> {
-        if (await this.usersService.existsByEmail(createUserDto.email)) {
-            throw new ConflictException('Email is already registered');
-        }
-
         const user = await this.usersService.create(createUserDto);
 
         const payload: JwtPayload = { sub: user.id, email: user.email };
