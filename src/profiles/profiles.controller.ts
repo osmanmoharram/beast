@@ -8,6 +8,7 @@ import {
     ParseIntPipe,
     Patch,
 } from '@nestjs/common';
+import { Owns } from '../common/policies/owns.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type JwtPayload } from '../auth/types/jwt.type';
 import { SuccessResponse } from '../common/types/success-response';
@@ -46,6 +47,7 @@ export class ProfilesController {
 
     @Patch(':id')
     @HttpCode(HttpStatus.OK)
+    @Owns(Profile, 'user.id')
     update(
         @Param('id', ParseIntPipe) id: number,
         @Body() updateProfileDto: UpdateProfileDto,

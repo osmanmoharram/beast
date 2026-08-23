@@ -1,6 +1,7 @@
 // import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { Owns } from '../common/policies/owns.decorator';
 import { UsersService } from './users.service';
 import {
     Body,
@@ -39,6 +40,7 @@ export class UsersController {
 
     @Patch(':id')
     @HttpCode(HttpStatus.OK)
+    @Owns(User, 'id')
     update(
         @Param('id', ParseIntPipe) id: number,
         @Body() updateUserDto: UpdateUserDto,
@@ -48,6 +50,7 @@ export class UsersController {
 
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
+    @Owns(User, 'id')
     remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
         return this.usersService.remove(id);
     }
