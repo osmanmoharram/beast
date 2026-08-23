@@ -5,7 +5,7 @@ import {
     useState,
     type ReactNode,
 } from 'react';
-import { ApiError, tokenStore } from '../api/client';
+import { ApiError, setUnauthorizedHandler, tokenStore } from '../api/client';
 import { auth as authApi, type RegisterInput } from '../api/resources';
 import { profiles } from '../api/resources';
 import type { Profile, User } from '../api/types';
@@ -61,6 +61,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
 
         return () => controller.abort();
+    }, []);
+
+    /**
+     * Ends the session as soon as any request reports the token is no longer
+     * good. Clearing the profile is what RequireAuth watches, so the next
+     * render sends them to the login form instead of leaving a signed-in
+     * shell around screens that can only error.
+     */
+    useEffect(() => {
+        setUnauthorizedHandler(() => {
+            tokenStore.clear();
+            setProfile(null);
+        });
+
+        return () => setUnauthorizedHandler(null);
     }, []);
 
     const login = useCallback(async (email: string, password: string) => {

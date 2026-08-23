@@ -6,7 +6,6 @@ import { Post } from './entities/post.entity';
 import { SearchIndexService } from './search-index.service';
 import { PolicyGuard } from '../common/policies/policy.guard';
 
-
 @Module({
     imports: [TypeOrmModule.forFeature([Post])],
     controllers: [PostsController],
