@@ -7,6 +7,7 @@ import { AvatarsService } from './avatars.service';
 import { ProfilesController } from './profiles.controller';
 import { ProfilesService } from './profiles.service';
 import { Profile } from './entities/profile.entity';
+import { PolicyGuard } from '../common/policies/policy.guard';
 
 @Module({
     imports: [
@@ -20,7 +21,7 @@ import { Profile } from './entities/profile.entity';
         }),
     ],
     controllers: [ProfilesController],
-    providers: [ProfilesService, AvatarsService],
+    providers: [ProfilesService, AvatarsService, PolicyGuard],
     // Exported for AuthModule: register and login both answer with the user's
     // profile, and it has to carry the same avatar as everywhere else.
     exports: [AvatarsService],

@@ -1,3 +1,4 @@
+import { Owns } from '../common/policies/owns.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type JwtPayload } from '../auth/types/jwt.type';
 import { SuccessResponse } from '../common/types/success-response';
@@ -50,6 +51,7 @@ export class PostsController {
 
     @Patch(':id')
     @HttpCode(HttpStatus.OK)
+    @Owns(PostEntity, 'author.id')
     update(
         @Param('id', ParseIntPipe) id: number,
         @Body() updatePostDto: UpdatePostDto,
@@ -59,6 +61,7 @@ export class PostsController {
 
     @Delete(':id')
     @HttpCode(HttpStatus.OK)
+    @Owns(PostEntity, 'author.id')
     remove(@Param('id', ParseIntPipe) id: number): Promise<SuccessResponse> {
         return this.postsService.remove(id);
     }
