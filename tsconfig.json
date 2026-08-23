@@ -1,4 +1,7 @@
 {
+    // Only the Nest app. Without this the server build walks into client/
+    // and tries to compile React with CommonJS settings.
+    "include": ["src"],
     "compilerOptions": {
         "module": "nodenext",
         "moduleResolution": "nodenext",
