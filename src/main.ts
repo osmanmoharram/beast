@@ -4,6 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { useContainer } from 'class-validator';
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
+import methodOverride from 'method-override';
+import { join } from 'node:path';
+import hbs from 'hbs';
+import { CsrfGuard } from './web/guards/csrf.guard';
 import { AppModule } from './app.module';
 import { UPLOADS_ROUTE, uploadsPath } from './config/uploads/options';
 
@@ -23,6 +28,11 @@ async function bootstrap() {
     // wire. Registered first so it wraps every later handler, static files
     // included.
     app.use(compression());
+    // Both of these have to run before the router: the guards read cookies to
+    // find the session, and the route a form reaches depends on the override
+    // having already rewritten POST into PATCH or DELETE.
+    app.use(cookieParser());
+    app.use(methodOverride('_method'));
     // Lets class-validator resolve constraint classes through Nest's DI, which
     // is what allows IsEmailUniqueConstraint to inject the User repository.
     useContainer(app.select(AppModule), { fallbackOnErrors: true });
@@ -35,6 +45,11 @@ async function bootstrap() {
     app.useGlobalInterceptors(
         new ClassSerializerInterceptor(app.get(Reflector)),
     );
+
+    // Cookies bring CSRF with them, so every state-changing request that
+    // authenticates by cookie has to carry a matching token. Bearer-token
+    // callers are exempt inside the guard.
+    app.useGlobalGuards(new CsrfGuard());
 
     // Uploads are plain files with generated names and no secrets in them, so
     // they are served straight off disk rather than through a controller that
@@ -49,6 +64,42 @@ async function bootstrap() {
         immutable: true,
     });
 
+    // Templates and their partials live outside src/ because they are not
+    // compiled; __dirname is dist/ at runtime, so both climb out of it.
+    const root = join(__dirname, '..');
+    app.setBaseViewsDir(join(root, 'views'));
+    app.setViewEngine('hbs');
+    hbs.registerPartials(join(root, 'views', 'partials'));
+    registerHelpers();
+
+    // Stylesheet for the rendered pages, separate from the uploads mount so
+    // user files and application assets never share a directory.
+    app.useStaticAssets(join(root, 'public'), { prefix: '/public' });
+
     await app.listen(process.env.PORT ?? 3000);
 }
+/**
+ * Handlebars is deliberately logic-less, so anything a template cannot decide
+ * for itself is decided here. Kept small: a helper is a sign the controller
+ * should probably have prepared the value instead.
+ */
+function registerHelpers(): void {
+    hbs.registerHelper('date', (value: unknown) =>
+        value ? new Date(value as string).toLocaleDateString() : '',
+    );
+
+    hbs.registerHelper('datetime', (value: unknown) =>
+        value ? new Date(value as string).toLocaleString() : '',
+    );
+
+    hbs.registerHelper('excerpt', (value: unknown, length: unknown) => {
+        const text = typeof value === 'string' ? value : '';
+        const limit = typeof length === 'number' ? length : 180;
+
+        return text.length > limit
+            ? `${text.slice(0, limit).trimEnd()}…`
+            : text;
+    });
+}
+
 void bootstrap();

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{{#if title}}{{title}} · {{/if}}beast</title>
+        <link rel="stylesheet" href="/public/app.css" />
+    </head>
+    <body>
+        {{> header}}
+
+        <main class="content">
+            {{#if flash}}
+                <p class="message message--ok" role="status">{{flash}}</p>
+            {{/if}}
+
+            {{> errors}}
+
+            {{{body}}}
+        </main>
+    </body>
+</html>

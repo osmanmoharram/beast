@@ -1,0 +1,33 @@
+<h1>{{title}}</h1>
+
+<form class="form-card" method="post" action="{{action}}">
+    {{> csrf}}
+
+    <p class="field">
+        <label for="title">Title</label>
+        <input
+            id="title"
+            name="title"
+            value="{{post.title}}"
+            minlength="3"
+            maxlength="150"
+            required
+        />
+    </p>
+
+    <p class="field">
+        <label for="body">Body</label>
+        <textarea
+            id="body"
+            name="body"
+            minlength="3"
+            maxlength="1000"
+            required
+        >{{post.body}}</textarea>
+    </p>
+
+    <span class="actions">
+        <button type="submit">{{submit}}</button>
+        <a class="button button--ghost" href="/posts">Cancel</a>
+    </span>
+</form>

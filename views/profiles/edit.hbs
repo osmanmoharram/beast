@@ -1,0 +1,67 @@
+<h1>Your profile</h1>
+
+<section class="form-card spaced">
+    <div class="byline">
+        <img
+            class="avatar"
+            src="{{profile.avatarUrl}}"
+            alt=""
+            width="72"
+            height="72"
+        />
+        <span>
+            <strong>{{profile.displayName}}</strong>
+            <br />@{{profile.user.username}}
+        </span>
+    </div>
+
+    <form
+        method="post"
+        action="/profiles/me/avatar"
+        enctype="multipart/form-data"
+    >
+        {{> csrf}}
+        <p class="field">
+            <label for="avatar">Avatar</label>
+            <input id="avatar" name="avatar" type="file" accept="image/*" required />
+            <small class="muted">
+                JPEG, PNG, WebP or GIF, up to 2 MB. Without one you get a
+                Gravatar generated from your email.
+            </small>
+        </p>
+        <button type="submit">Upload</button>
+    </form>
+
+    <form method="post" action="/profiles/me/avatar?_method=DELETE">
+        {{> csrf}}
+        <button class="button--danger" type="submit">Remove avatar</button>
+    </form>
+</section>
+
+<form class="form-card" method="post" action="/profiles/me?_method=PATCH">
+    {{> csrf}}
+
+    <p class="field">
+        <label for="displayName">Display name</label>
+        <input
+            id="displayName"
+            name="displayName"
+            value="{{profile.displayName}}"
+            maxlength="100"
+            required
+        />
+    </p>
+
+    <p class="field">
+        <label for="birthDate">Birth date</label>
+        <input
+            id="birthDate"
+            name="birthDate"
+            type="date"
+            value="{{birthDateValue}}"
+            max="{{today}}"
+        />
+    </p>
+
+    <button type="submit">Save changes</button>
+</form>

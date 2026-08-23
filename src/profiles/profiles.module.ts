@@ -24,6 +24,6 @@ import { PolicyGuard } from '../common/policies/policy.guard';
     providers: [ProfilesService, AvatarsService, PolicyGuard],
     // Exported for AuthModule: register and login both answer with the user's
     // profile, and it has to carry the same avatar as everywhere else.
-    exports: [AvatarsService],
+    exports: [AvatarsService, ProfilesService],
 })
 export class ProfilesModule {}

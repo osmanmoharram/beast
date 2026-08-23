@@ -1,0 +1,20 @@
+<article class="card">
+    <div class="byline">
+        <img
+            class="avatar"
+            src="{{profile.avatarUrl}}"
+            alt=""
+            width="72"
+            height="72"
+        />
+        <span>
+            <h1 class="tight">{{profile.displayName}}</h1>
+            @{{profile.user.username}}
+        </span>
+    </div>
+
+    {{#if profile.birthDate}}
+        <p class="muted">Born {{date profile.birthDate}}</p>
+    {{/if}}
+    <p class="muted">Joined {{date profile.createdAt}}</p>
+</article>

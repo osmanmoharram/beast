@@ -1,8 +1,11 @@
 /**
+ * The JSON API lives under /api now that the server also renders HTML at the
+ * bare paths — /posts is a page, /api/posts is the resource behind it.
+ *
  * `__API_URL__` is localhost on whatever PORT the repository root .env gives
- * the server; VITE_API_URL overrides it for an API that is anywhere else.
+ * the server; VITE_API_URL overrides the whole origin for an API elsewhere.
  */
-const BASE_URL = import.meta.env.VITE_API_URL ?? __API_URL__;
+const BASE_URL = import.meta.env.VITE_API_URL ?? `${__API_URL__}/api`;
 
 /**
  * Where the token lives. localStorage is readable by any script on the page,

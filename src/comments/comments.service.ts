@@ -56,6 +56,17 @@ export class CommentsService {
         return paginate(result, paginationDto);
     }
 
+    /**
+     * Total comments on a post. Exists so a caller that only needs the number
+     * — the web controller working out which page a new comment landed on —
+     * does not have to fetch a page of rows to find out.
+     */
+    async countForPost(postId: Post['id']): Promise<number> {
+        return await this.commentsRepository.count({
+            where: { post: { id: postId } },
+        });
+    }
+
     async create(
         postId: Post['id'],
         createCommentDto: CreateCommentDto,

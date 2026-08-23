@@ -1,0 +1,25 @@
+<h1>People</h1>
+
+{{#each profiles}}
+    <article class="card">
+        <div class="byline">
+            <img
+                class="avatar"
+                src="{{this.avatarUrl}}"
+                alt=""
+                width="40"
+                height="40"
+            />
+            <span>
+                <a href="/profiles/{{this.id}}">
+                    <strong>{{this.displayName}}</strong>
+                </a>
+                <br />@{{this.user.username}}
+            </span>
+        </div>
+    </article>
+{{else}}
+    <p class="state">Nobody here yet.</p>
+{{/each}}
+
+{{> pager}}

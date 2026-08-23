@@ -1,0 +1,32 @@
+<div class="page-head">
+    <h1>Posts</h1>
+    <a class="button" href="/posts/new">Write a post</a>
+</div>
+
+<form class="search" method="get" action="/posts">
+    <input
+        type="search"
+        name="q"
+        value="{{q}}"
+        placeholder="Search titles and bodies…"
+        aria-label="Search posts"
+    />
+    <button type="submit">Search</button>
+    {{#if q}}<a class="button button--ghost" href="/posts">Clear</a>{{/if}}
+</form>
+
+{{#each posts}}
+    <article class="card">
+        <h2><a href="/posts/{{this.id}}">{{this.title}}</a></h2>
+        <p class="byline">
+            {{this.author.username}} · {{date this.createdAt}}
+        </p>
+        <p class="excerpt">{{excerpt this.body}}</p>
+    </article>
+{{else}}
+    <p class="state">
+        {{#if q}}Nothing matches “{{q}}”.{{else}}No posts yet.{{/if}}
+    </p>
+{{/each}}
+
+{{> pager}}
