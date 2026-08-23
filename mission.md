@@ -1,9 +1,6 @@
-
 ### search
 
 ### policies
-
-### profiles
 
 ### views
 

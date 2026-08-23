@@ -25,16 +25,26 @@ export class UsersService {
     // }
 
     async create(createUserDto: CreateUserDto): Promise<User> {
+        // displayName belongs to the profile and confirm is not a column, so
+        // neither is spread onto the user.
+        const { displayName, confirm, ...rest } = createUserDto;
+        void confirm;
+
         const user = this.usersRepository.create({
-            ...createUserDto,
+            ...rest,
             password: await bcrypt.hash(createUserDto.password, BCRYPT_ROUNDS),
+            // Rides along on the same save() so the account and its profile
+            // land together, in a single transaction.
+            profile: { displayName },
         });
 
         try {
             return await this.usersRepository.save(user);
         } catch (error) {
-            if (this.isDuplicateEntry(error)) {
-                throw new ConflictException('Email is already registered');
+            const column = this.duplicateColumn(error);
+
+            if (column !== null) {
+                throw this.conflictFor(column);
             }
 
             throw error;
@@ -72,8 +82,10 @@ export class UsersService {
         try {
             return await this.usersRepository.save(user);
         } catch (error) {
-            if (this.isDuplicateEntry(error)) {
-                throw new ConflictException('Email is already registered');
+            const column = this.duplicateColumn(error);
+
+            if (column !== null) {
+                throw this.conflictFor(column);
             }
 
             throw error;
@@ -105,11 +117,44 @@ export class UsersService {
         });
     }
 
-    private isDuplicateEntry(error: unknown): boolean {
-        return (
-            error instanceof QueryFailedError &&
-            (error.driverError as { code?: string })?.code ===
-                POSTGRES_UNIQUE_VIOLATION
+    /**
+     * Backstop for the race the IsEmailUnique / IsUsernameUnique validators
+     * cannot close: both check-then-insert, so two concurrent registrations can
+     * both pass validation. Postgres names the offending column in `detail`
+     * ("Key (email)=(a@b.c) already exists"), which is what tells the two
+     * unique columns apart — the constraint names themselves are generated
+     * hashes and not worth matching on.
+     */
+    private duplicateColumn(error: unknown): 'email' | 'username' | null {
+        if (!(error instanceof QueryFailedError)) {
+            return null;
+        }
+
+        const driverError = error.driverError as {
+            code?: string;
+            detail?: string;
+        };
+
+        if (driverError?.code !== POSTGRES_UNIQUE_VIOLATION) {
+            return null;
+        }
+
+        if (driverError.detail?.includes('(username)')) {
+            return 'username';
+        }
+
+        if (driverError.detail?.includes('(email)')) {
+            return 'email';
+        }
+
+        return null;
+    }
+
+    private conflictFor(column: 'email' | 'username'): ConflictException {
+        return new ConflictException(
+            column === 'username'
+                ? 'Username is already taken'
+                : 'Email is already registered',
         );
     }
 
@@ -119,9 +164,5 @@ export class UsersService {
 
     // add policies
 
-    // add profiles
-
     // upload images
-
-    // make user names start with @
 }
