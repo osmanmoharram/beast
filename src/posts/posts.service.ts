@@ -1,5 +1,6 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import {
+    FindOptionsOrder,
     FindOptionsSelect,
     FindOptionsWhere,
     ILike,
@@ -12,16 +13,24 @@ import { SearchPostsDto } from './dto/search-posts.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { User } from '../users/entities/user.entity';
 import { SuccessResponse } from '../common/types/success-response';
+import { Paginated, paginate, toSkipTake } from '../common/types/paginated';
 
 const POST_SELECT: FindOptionsSelect<Post> = {
     id: true,
     title: true,
     body: true,
     author: { id: true, username: true, email: true },
-    comments: { id: true, body: true },
     createdAt: true,
     updatedAt: true,
 };
+
+/**
+ * Newest first, with the id as a tiebreaker. Ordering is not cosmetic once
+ * there are pages: rows come back in whatever order the plan happens to
+ * produce, so without a total order two pages can repeat a post and skip
+ * another. The (createdAt, id) index exists to make this free.
+ */
+const POST_ORDER: FindOptionsOrder<Post> = { createdAt: 'DESC', id: 'DESC' };
 
 @Injectable()
 export class PostsService {
@@ -30,15 +39,31 @@ export class PostsService {
         private readonly postsRepository: Repository<Post>,
     ) {}
 
-    async findAll({ q }: SearchPostsDto = {}): Promise<Post[]> {
-        return await this.postsRepository.find({
-            where: this.searchCriteria(q),
-            relations: {
-                author: true,
-                comments: true,
-            },
-            select: POST_SELECT,
-        });
+    /**
+     * The comments relation is deliberately absent. Joining it fanned every
+     * post out into one row per comment and shipped the whole thread of every
+     * post in the list — megabytes to render a page of titles. Nothing read
+     * them: the detail route does not return comments either, and a client
+     * that wants them asks /posts/:id/comments, which pages them properly.
+     */
+    async findAll(searchPostsDto: SearchPostsDto): Promise<Paginated<Post>> {
+        const where = this.searchCriteria(searchPostsDto.q);
+
+        // Counting without the join, and in parallel with the page: the total
+        // is a property of the rows that match, and the author each one
+        // belongs to has no bearing on it.
+        const result = await Promise.all([
+            this.postsRepository.find({
+                where,
+                relations: { author: true },
+                select: POST_SELECT,
+                order: POST_ORDER,
+                ...toSkipTake(searchPostsDto),
+            }),
+            this.postsRepository.count({ where }),
+        ]);
+
+        return paginate(result, searchPostsDto);
     }
 
     async create(

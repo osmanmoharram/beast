@@ -1,11 +1,18 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { FindOptionsSelect, FindOptionsWhere, Repository } from 'typeorm';
+import {
+    FindOptionsOrder,
+    FindOptionsSelect,
+    FindOptionsWhere,
+    Repository,
+} from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Profile } from './entities/profile.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { User } from '../users/entities/user.entity';
 import { SuccessResponse } from '../common/types/success-response';
 import { AvatarsService } from './avatars.service';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { Paginated, paginate, toSkipTake } from '../common/types/paginated';
 
 const PROFILE_SELECT: FindOptionsSelect<Profile> = {
     id: true,
@@ -17,6 +24,8 @@ const PROFILE_SELECT: FindOptionsSelect<Profile> = {
     updatedAt: true,
 };
 
+const PROFILE_ORDER: FindOptionsOrder<Profile> = { id: 'ASC' };
+
 @Injectable()
 export class ProfilesService {
     constructor(
@@ -25,15 +34,22 @@ export class ProfilesService {
         private readonly avatarsService: AvatarsService,
     ) {}
 
-    async findAll(): Promise<Profile[]> {
-        const profiles = await this.profilesRepository.find({
-            relations: { user: true },
-            select: PROFILE_SELECT,
-        });
+    async findAll(paginationDto: PaginationDto): Promise<Paginated<Profile>> {
+        const [profiles, total] = await Promise.all([
+            this.profilesRepository.find({
+                relations: { user: true },
+                select: PROFILE_SELECT,
+                order: PROFILE_ORDER,
+                ...toSkipTake(paginationDto),
+            }),
+            this.profilesRepository.count(),
+        ]);
 
-        return profiles.map((profile) =>
+        const resolved = profiles.map((profile) =>
             this.avatarsService.resolve(profile, profile.user.email),
         );
+
+        return paginate([resolved, total], paginationDto);
     }
 
     async findOneOrFail(id: Profile['id']): Promise<Profile> {

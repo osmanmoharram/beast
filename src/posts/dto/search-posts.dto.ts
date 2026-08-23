@@ -1,4 +1,5 @@
 import { IsOptional, IsString, Length } from 'class-validator';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 /**
  * A narrow shape rather than TypeORM's FindOptionsWhere: exposing the latter
@@ -7,7 +8,7 @@ import { IsOptional, IsString, Length } from 'class-validator';
  * builder and threw EntityPropertyNotFoundError. A real class restores
  * `whitelist: true`, which drops anything not declared here.
  */
-export class SearchPostsDto {
+export class SearchPostsDto extends PaginationDto {
     @IsOptional()
     @IsString()
     @Length(1, 100)
