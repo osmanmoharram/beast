@@ -34,13 +34,22 @@ export function PostDetailPage() {
     const post = useAsync<Post>(loadPost, [postId]);
     const thread = useAsync<Paginated<Comment>>(loadComments, [postId, page]);
 
-    async function run(action: () => Promise<unknown>) {
+    /**
+     * Runs a mutation and refreshes the thread behind it. `reload` is off for
+     * the one action that navigates away — deleting the post — because
+     * refetching the comments of a row that no longer exists just asks the
+     * API for a 404 on the way out.
+     */
+    async function run(action: () => Promise<unknown>, reload = true) {
         setBusy(true);
         setActionError(null);
 
         try {
             await action();
-            thread.reload();
+
+            if (reload) {
+                thread.reload();
+            }
         } catch (cause) {
             setActionError(cause as ApiError);
         } finally {
@@ -95,7 +104,7 @@ export function PostDetailPage() {
                                     void run(async () => {
                                         await posts.remove(article.id);
                                         navigate('/posts');
-                                    })
+                                    }, false)
                                 }
                             >
                                 Delete

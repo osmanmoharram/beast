@@ -64,6 +64,21 @@ async function toApiError(response: Response): Promise<ApiError> {
     return new ApiError(response.status, messages);
 }
 
+/**
+ * Called when a request that carried a token is refused with a 401, which
+ * means the token has expired or been invalidated. Registered by AuthProvider.
+ *
+ * Handled centrally because it can happen on any request: the JWT lasts an
+ * hour, so a tab left open outlives it, and every screen would otherwise sit
+ * there showing "Invalid or expired token" under a header still displaying
+ * the signed-in user, with no way back to the login form.
+ */
+let onUnauthorized: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+    onUnauthorized = handler;
+}
+
 type RequestOptions = {
     method?: string;
     /** Serialised as JSON. Use `form` for multipart instead. */
@@ -98,7 +113,16 @@ async function request<T>(
     });
 
     if (!response.ok) {
-        throw await toApiError(response);
+        const error = await toApiError(response);
+
+        // Only when a token was actually sent: a 401 from the login form is
+        // wrong credentials, not an expired session, and must not be turned
+        // into a redirect that throws the message away.
+        if (error.isUnauthorized && token) {
+            onUnauthorized?.();
+        }
+
+        throw error;
     }
 
     // 204, and any other empty body, would make response.json() throw.

@@ -192,6 +192,41 @@ textarea {
     resize: vertical;
 }
 
+/*
+ * A file input's button is a shadow-DOM pseudo-element, so none of the button
+ * rules below reach it. Left native it inherits the browser's own colours,
+ * which against a dark surface can come out dark-on-dark — a control that is
+ * there, and clickable, but reads as absent. Styling it explicitly also gives
+ * it a cursor and a hover state, so it looks like the button it is.
+ */
+input[type='file'] {
+    padding: 0.35rem;
+    cursor: pointer;
+}
+
+input[type='file']::file-selector-button {
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 0.7rem;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+}
+
+input[type='file']::file-selector-button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+input[type='file']:disabled,
+input[type='file']:disabled::file-selector-button {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .button,
 button {
     font: inherit;
