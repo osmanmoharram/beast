@@ -28,6 +28,10 @@ export class UsersService {
         const user = this.usersRepository.create({
             ...createUserDto,
             password: await bcrypt.hash(createUserDto.password, BCRYPT_ROUNDS),
+            // Empty on purpose. Every column on Profile is nullable, so this
+            // rides along on the same save() and gives the account a profile
+            // to PATCH rather than one it has to create first.
+            profile: {},
         });
 
         try {
