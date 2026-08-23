@@ -3,11 +3,13 @@ import { getMetadataStorage, validateSync } from 'class-validator';
 import { DatabaseVariables } from './database/schema';
 import { EnvironmentVariables } from './app/schema';
 import { JwtVariables } from './jwt/schema';
+import { UploadsVariables } from './uploads/schema';
 
 const schemas: ClassConstructor<object>[] = [
     EnvironmentVariables,
     DatabaseVariables,
     JwtVariables,
+    UploadsVariables,
 ];
 
 /**

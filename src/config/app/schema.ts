@@ -3,6 +3,7 @@ import {
     IsEnum,
     IsInt,
     IsNotEmpty,
+    IsUrl,
     Length,
     IsString,
     Max,
@@ -34,4 +35,14 @@ export class EnvironmentVariables {
     @Max(8888)
     @Type(() => Number)
     PORT: number;
+
+    /**
+     * Public origin of this API. Uploaded files are served by the app itself,
+     * so it is the only way to hand a client an absolute URL for one — the
+     * request that stores an avatar is not necessarily the one that reads it.
+     *
+     * `require_tld` is off because the local origin is http://localhost:3000.
+     */
+    @IsUrl({ require_tld: false })
+    APP_URL: string;
 }
