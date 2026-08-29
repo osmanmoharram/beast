@@ -6,4 +6,4 @@
  * value is derived, not configured: VITE_API_URL is still the way to override
  * it, and this is only the fallback.
  */
-declare const __API_URL__: string
+declare const __API_URL__: string;
