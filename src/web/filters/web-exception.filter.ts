@@ -5,6 +5,7 @@ import {
     ForbiddenException,
     HttpException,
     HttpStatus,
+    Logger,
     UnauthorizedException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
@@ -22,6 +23,14 @@ import { messagesOf, safeNext, wantsHtml } from '../web.helpers';
  */
 @Catch()
 export class WebExceptionFilter implements ExceptionFilter {
+    /**
+     * A global @Catch() replaces Nest's own ExceptionsHandler, which is what
+     * would otherwise log an unhandled exception. Without this, a dropped
+     * database connection reaches the visitor as a polite apology and leaves
+     * nothing at all in the server output.
+     */
+    private readonly logger = new Logger(WebExceptionFilter.name);
+
     catch(exception: unknown, host: ArgumentsHost): void {
         const http = host.switchToHttp();
         const request = http.getRequest<Request>();
@@ -31,6 +40,20 @@ export class WebExceptionFilter implements ExceptionFilter {
             exception instanceof HttpException
                 ? exception.getStatus()
                 : HttpStatus.INTERNAL_SERVER_ERROR;
+
+        if (status >= SERVER_ERROR) {
+            this.logger.error(
+                `${request.method} ${request.originalUrl} failed`,
+                exception instanceof Error ? exception.stack : exception,
+            );
+        }
+
+        // A handler that already started writing — a controller rendering its
+        // own form back with errors — must not have a second response layered
+        // on top of it, whichever shape that second one would take.
+        if (response.headersSent) {
+            return;
+        }
 
         if (!wantsHtml(request)) {
             response.status(status).json(
@@ -42,13 +65,6 @@ export class WebExceptionFilter implements ExceptionFilter {
                       },
             );
 
-            return;
-        }
-
-        // A handler that already started writing — a controller rendering its
-        // own form back with errors — must not have a second response layered
-        // on top of it.
-        if (response.headersSent) {
             return;
         }
 

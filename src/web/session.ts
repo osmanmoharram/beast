@@ -31,5 +31,19 @@ export const FLASH_COOKIE = 'flash';
 /** Readable by script on purpose: the form has to echo it back. */
 export const CSRF_COOKIE = 'csrf';
 
+/**
+ * Not httpOnly — the form has to read this one — but `secure` in production
+ * all the same. Double-submit rests on the attacker controlling neither half
+ * of the pair, and someone able to write this cookie over plaintext controls
+ * both: they can set a value and then submit a form carrying it.
+ */
+export function csrfCookieOptions(isProduction: boolean) {
+    return {
+        sameSite: 'lax' as const,
+        secure: isProduction,
+        path: '/',
+    };
+}
+
 /** Hidden field every state-changing form must carry. */
 export const CSRF_FIELD = '_csrf';

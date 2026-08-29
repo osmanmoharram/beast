@@ -22,6 +22,10 @@ import { type JwtPayload } from '../auth/types/jwt.type';
 import { SuccessResponse } from '../common/types/success-response';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Paginated } from '../common/types/paginated';
+// Reaching into web/ for this one import: CsrfGuard refuses a multipart
+// request unless the route declares this, and this route is reachable with
+// the same session cookie the rendered pages use.
+import { MultipartCsrfInterceptor } from '../web/guards/csrf.guard';
 import { AVATAR_MIME_TYPES } from './avatars.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Profile } from './entities/profile.entity';
@@ -64,7 +68,7 @@ export class ProfilesController {
      */
     @Post('me/avatar')
     @HttpCode(HttpStatus.OK)
-    @UseInterceptors(FileInterceptor('avatar'))
+    @UseInterceptors(FileInterceptor('avatar'), MultipartCsrfInterceptor)
     uploadOwnAvatar(
         @CurrentUser() user: JwtPayload,
         @UploadedFile(

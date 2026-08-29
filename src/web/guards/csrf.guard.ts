@@ -7,9 +7,16 @@ import {
     Injectable,
     NestInterceptor,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { INTERCEPTORS_METADATA } from '@nestjs/common/constants';
 import { Request, Response } from 'express';
 import { Observable } from 'rxjs';
-import { CSRF_COOKIE, CSRF_FIELD, SESSION_COOKIE } from '../session';
+import {
+    CSRF_COOKIE,
+    CSRF_FIELD,
+    SESSION_COOKIE,
+    csrfCookieOptions,
+} from '../session';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -42,11 +49,20 @@ export function assertCsrf(request: Request): void {
 function isExempt(request: Request): boolean {
     return (
         SAFE_METHODS.has(request.method) ||
-        // Nothing was authenticated by cookie, so there is no ambient
-        // authority for another site to borrow. A bearer-token API client
-        // lands here, which is why it never needs a token.
+        // Authenticated by a header rather than by the cookie, which is what
+        // AuthGuard prefers when both are present. The browser never attaches
+        // this on its own, so another site cannot produce it without a
+        // preflight that CORS refuses — there is no ambient authority to
+        // borrow, and the SPA never has to carry a token.
+        hasBearerToken(request) ||
+        // Nothing was authenticated by cookie either, so there is nothing to
+        // abuse: the login form itself lands here.
         !request.cookies?.[SESSION_COOKIE]
     );
+}
+
+function hasBearerToken(request: Request): boolean {
+    return request.headers.authorization?.startsWith('Bearer ') ?? false;
 }
 
 /**
@@ -64,10 +80,24 @@ function isMultipart(request: Request): boolean {
 
 @Injectable()
 export class CsrfGuard implements CanActivate {
+    constructor(private readonly reflector: Reflector) {}
+
     canActivate(context: ExecutionContext): boolean {
         const request = context.switchToHttp().getRequest<Request>();
 
-        if (isExempt(request) || isMultipart(request)) {
+        if (isExempt(request)) {
+            return true;
+        }
+
+        if (isMultipart(request)) {
+            // Waved through only when something later will actually do the
+            // check. A multipart route that forgets the interceptor is
+            // refused here rather than silently exempted — the failure is
+            // then obvious on the first request instead of invisible.
+            if (!defersToInterceptor(this.reflector, context)) {
+                throw new ForbiddenException('Invalid or missing CSRF token');
+            }
+
             return true;
         }
 
@@ -75,6 +105,33 @@ export class CsrfGuard implements CanActivate {
 
         return true;
     }
+}
+
+/**
+ * Whether the route declares MultipartCsrfInterceptor, which is what makes
+ * skipping the check here safe. Read off the same metadata @UseInterceptors
+ * writes, so the two cannot disagree.
+ */
+function defersToInterceptor(
+    reflector: Reflector,
+    context: ExecutionContext,
+): boolean {
+    const declared = [
+        ...(reflector.get<unknown[]>(
+            INTERCEPTORS_METADATA,
+            context.getHandler(),
+        ) ?? []),
+        ...(reflector.get<unknown[]>(
+            INTERCEPTORS_METADATA,
+            context.getClass(),
+        ) ?? []),
+    ];
+
+    return declared.some(
+        (interceptor) =>
+            interceptor === MultipartCsrfInterceptor ||
+            interceptor instanceof MultipartCsrfInterceptor,
+    );
 }
 
 /**
@@ -114,7 +171,11 @@ function equals(a: string, b: string): boolean {
  * templates. Runs on every rendered request rather than only on pages with
  * forms: the cookie has to exist before the first form is drawn.
  */
-export function csrfToken(request: Request, response: Response): string {
+export function csrfToken(
+    request: Request,
+    response: Response,
+    isProduction: boolean,
+): string {
     const existing: unknown = request.cookies?.[CSRF_COOKIE];
 
     if (typeof existing === 'string' && existing.length === 64) {
@@ -126,7 +187,7 @@ export function csrfToken(request: Request, response: Response): string {
     // Deliberately not httpOnly. The form has to carry the value, and the
     // secret is not the token itself but that a foreign origin cannot read
     // this cookie to copy it.
-    response.cookie(CSRF_COOKIE, token, { sameSite: 'lax', path: '/' });
+    response.cookie(CSRF_COOKIE, token, csrfCookieOptions(isProduction));
 
     return token;
 }
