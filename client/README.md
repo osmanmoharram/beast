@@ -12,10 +12,11 @@ npm run start:dev      # repository root, serves the API on PORT from .env
 npm run client:dev     # repository root, serves this app on :5173
 ```
 
-`VITE_API_URL` overrides the API origin; it defaults to localhost on the
-`PORT` that the repository root `.env` gives the API, read at build time by
-`vite.config.ts`. Copy `.env.example` to `.env` to point it somewhere else.
-CORS is already open on the API, so no proxy is configured.
+`VITE_API_URL` overrides the whole base URL, `/api` prefix included; it
+defaults to localhost on the `PORT` that the repository root `.env` gives the
+API, read at build time by `vite.config.ts`. Copy `.env.example` to `.env` to
+point it somewhere else. CORS is already open on the API, so no proxy is
+configured.
 
 ## Layout
 

@@ -1,0 +1,10 @@
+{{!--
+    Every state-changing form carries this. CsrfGuard compares it with the
+    csrf cookie, which another origin can neither read nor forge.
+
+    @root, not a bare {{csrfToken}}: a partial inherits whatever context it is
+    invoked in, so inside an {{#each}} the lookup would resolve against the
+    item being iterated, find nothing, and silently render value="" — a form
+    that looks right and is rejected on submit.
+--}}
+<input type="hidden" name="_csrf" value="{{@root.csrfToken}}" />

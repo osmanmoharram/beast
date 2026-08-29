@@ -10,5 +10,6 @@ import { PolicyGuard } from '../common/policies/policy.guard';
     imports: [TypeOrmModule.forFeature([Comment, Post])],
     controllers: [CommentsController],
     providers: [CommentsService, PolicyGuard],
+    exports: [CommentsService],
 })
 export class CommentsModule {}

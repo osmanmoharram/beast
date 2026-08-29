@@ -1,0 +1,73 @@
+<div class="narrow">
+    <h1>Create account</h1>
+
+    <form class="form-card" method="post" action="/register">
+        {{> csrf}}
+
+        <p class="field">
+            <label for="displayName">Display name</label>
+            <input
+                id="displayName"
+                name="displayName"
+                value="{{form.displayName}}"
+                maxlength="100"
+                required
+            />
+        </p>
+
+        <p class="field">
+            <label for="username">Username</label>
+            <input
+                id="username"
+                name="username"
+                value="{{form.username}}"
+                pattern="[A-Za-z0-9_]+"
+                minlength="3"
+                maxlength="30"
+                required
+            />
+            <small class="muted">Letters, numbers and underscores.</small>
+        </p>
+
+        <p class="field">
+            <label for="email">Email</label>
+            <input
+                id="email"
+                name="email"
+                type="email"
+                value="{{form.email}}"
+                autocomplete="email"
+                required
+            />
+        </p>
+
+        <p class="field">
+            <label for="password">Password</label>
+            <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                minlength="3"
+                required
+            />
+        </p>
+
+        <p class="field">
+            <label for="confirm">Confirm password</label>
+            <input
+                id="confirm"
+                name="confirm"
+                type="password"
+                autocomplete="new-password"
+                required
+            />
+        </p>
+
+        <button type="submit">Create account</button>
+    </form>
+
+    <p class="muted centred">
+        Already registered? <a href="/login">Sign in</a>
+    </p>
+</div>

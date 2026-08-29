@@ -24,6 +24,11 @@ import { PolicyGuard } from '../common/policies/policy.guard';
     providers: [ProfilesService, AvatarsService, PolicyGuard],
     // Exported for AuthModule: register and login both answer with the user's
     // profile, and it has to carry the same avatar as everywhere else.
-    exports: [AvatarsService],
+    //
+    // MulterModule is re-exported for WebModule. FileInterceptor injects its
+    // options with @Optional(), so a controller in a module that cannot see
+    // this registration gets undefined and silently falls back to multer's
+    // defaults — memory storage with no size limit and no file count.
+    exports: [AvatarsService, ProfilesService, MulterModule],
 })
 export class ProfilesModule {}

@@ -1,0 +1,28 @@
+{{#if pager.show}}
+    <nav class="pagination" aria-label="Pagination">
+        {{#if pager.previousUrl}}
+            <a class="button button--ghost" href="{{pager.previousUrl}}">
+                ← Previous
+            </a>
+        {{else}}
+            <span class="button button--ghost is-disabled">← Previous</span>
+        {{/if}}
+
+        <span class="pagination__pages">
+            {{#each pager.links}}
+                {{#if this.current}}
+                    <strong aria-current="page">{{this.page}}</strong>
+                {{else}}
+                    <a href="{{this.url}}">{{this.page}}</a>
+                {{/if}}
+            {{/each}}
+            <small>{{pager.total}} total</small>
+        </span>
+
+        {{#if pager.nextUrl}}
+            <a class="button button--ghost" href="{{pager.nextUrl}}">Next →</a>
+        {{else}}
+            <span class="button button--ghost is-disabled">Next →</span>
+        {{/if}}
+    </nav>
+{{/if}}

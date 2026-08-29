@@ -10,5 +10,6 @@ import { PolicyGuard } from '../common/policies/policy.guard';
     imports: [TypeOrmModule.forFeature([Post])],
     controllers: [PostsController],
     providers: [PostsService, SearchIndexService, PolicyGuard],
+    exports: [PostsService],
 })
 export class PostsModule {}

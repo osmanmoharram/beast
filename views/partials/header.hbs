@@ -1,0 +1,32 @@
+<header class="topbar">
+    <a class="brand" href="/posts">beast</a>
+
+    <nav class="topbar__nav">
+        <a href="/posts">Posts</a>
+        <a href="/profiles">People</a>
+    </nav>
+
+    <div class="topbar__account">
+        {{#if currentProfile}}
+            <a class="topbar__me" href="/profiles/me">
+                <img
+                    class="avatar"
+                    src="{{currentProfile.avatarUrl}}"
+                    alt=""
+                    width="32"
+                    height="32"
+                />
+                <span>{{currentProfile.displayName}}</span>
+            </a>
+            <form method="post" action="/logout">
+                {{> csrf}}
+                <button class="button button--ghost" type="submit">
+                    Sign out
+                </button>
+            </form>
+        {{else}}
+            <a href="/login">Sign in</a>
+            <a class="button" href="/register">Create account</a>
+        {{/if}}
+    </div>
+</header>
