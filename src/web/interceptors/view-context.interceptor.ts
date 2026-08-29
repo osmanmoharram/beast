@@ -4,8 +4,10 @@ import {
     Injectable,
     NestInterceptor,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { Observable, from, switchMap } from 'rxjs';
+import { EnvType } from '../../config/app/schema';
 import { AuthenticatedRequest } from '../../auth/types/authenticated-request.type';
 import { ProfilesService } from '../../profiles/profiles.service';
 import { csrfToken } from '../guards/csrf.guard';
@@ -27,7 +29,16 @@ import { FLASH_COOKIE } from '../session';
  */
 @Injectable()
 export class ViewContextInterceptor implements NestInterceptor {
-    constructor(private readonly profilesService: ProfilesService) {}
+    private readonly isProduction: boolean;
+
+    constructor(
+        private readonly profilesService: ProfilesService,
+        config: ConfigService,
+    ) {
+        this.isProduction =
+            config.getOrThrow<string>('NODE_ENV') ===
+            String(EnvType.production);
+    }
 
     intercept(
         context: ExecutionContext,
@@ -45,7 +56,11 @@ export class ViewContextInterceptor implements NestInterceptor {
             return next.handle();
         }
 
-        response.locals.csrfToken = csrfToken(request, response);
+        response.locals.csrfToken = csrfToken(
+            request,
+            response,
+            this.isProduction,
+        );
         response.locals.flash = takeFlash(request, response);
 
         // Resolved before the handler runs, not after it returns: a handler

@@ -8,7 +8,6 @@ import cookieParser from 'cookie-parser';
 import methodOverride from 'method-override';
 import { join } from 'node:path';
 import hbs from 'hbs';
-import { CsrfGuard } from './web/guards/csrf.guard';
 import { AppModule } from './app.module';
 import { UPLOADS_ROUTE, uploadsPath } from './config/uploads/options';
 
@@ -45,11 +44,6 @@ async function bootstrap() {
     app.useGlobalInterceptors(
         new ClassSerializerInterceptor(app.get(Reflector)),
     );
-
-    // Cookies bring CSRF with them, so every state-changing request that
-    // authenticates by cookie has to carry a matching token. Bearer-token
-    // callers are exempt inside the guard.
-    app.useGlobalGuards(new CsrfGuard());
 
     // Uploads are plain files with generated names and no secrets in them, so
     // they are served straight off disk rather than through a controller that
