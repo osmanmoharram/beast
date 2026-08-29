@@ -8,13 +8,14 @@ Router; no state library and no UI kit, so the moving parts stay visible.
 The API has to be up first — the client is only a browser talking to it.
 
 ```bash
-npm run start:dev      # repository root, serves the API on :3000
+npm run start:dev      # repository root, serves the API on PORT from .env
 npm run client:dev     # repository root, serves this app on :5173
 ```
 
-`VITE_API_URL` overrides the API origin; it defaults to `http://localhost:3000`.
-Copy `.env.example` to `.env` to change it. CORS is already open on the API,
-so no proxy is configured.
+`VITE_API_URL` overrides the API origin; it defaults to localhost on the
+`PORT` that the repository root `.env` gives the API, read at build time by
+`vite.config.ts`. Copy `.env.example` to `.env` to point it somewhere else.
+CORS is already open on the API, so no proxy is configured.
 
 ## Layout
 

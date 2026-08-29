@@ -1,4 +1,8 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+/**
+ * `__API_URL__` is localhost on whatever PORT the repository root .env gives
+ * the server; VITE_API_URL overrides it for an API that is anywhere else.
+ */
+const BASE_URL = import.meta.env.VITE_API_URL ?? __API_URL__;
 
 /**
  * Where the token lives. localStorage is readable by any script on the page,
