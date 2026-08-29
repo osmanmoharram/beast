@@ -1,8 +1,19 @@
 import { HttpException } from '@nestjs/common';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { FLASH_COOKIE } from './session';
+
+/**
+ * Whether this caller is a browser navigating rather than something calling
+ * the API. A navigation sends `Accept: text/html`; fetch() defaults to a
+ * wildcard. It is what decides who gets a rendered page and who gets JSON,
+ * so the filter and the view context have to agree on it — hence one
+ * function rather than the test written twice.
+ */
+export function wantsHtml(request: Request): boolean {
+    return request.headers.accept?.includes('text/html') ?? false;
+}
 
 /**
  * Leaves a one-render message for the page a redirect is about to land on.

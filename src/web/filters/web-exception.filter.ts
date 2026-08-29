@@ -8,7 +8,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { messagesOf, safeNext } from '../web.helpers';
+import { messagesOf, safeNext, wantsHtml } from '../web.helpers';
 
 /**
  * One filter rather than several, because Nest resolves overlapping global
@@ -32,10 +32,7 @@ export class WebExceptionFilter implements ExceptionFilter {
                 ? exception.getStatus()
                 : HttpStatus.INTERNAL_SERVER_ERROR;
 
-        const wantsHtml =
-            request.headers.accept?.includes('text/html') ?? false;
-
-        if (!wantsHtml) {
+        if (!wantsHtml(request)) {
             response.status(status).json(
                 exception instanceof HttpException
                     ? exception.getResponse()

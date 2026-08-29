@@ -27,8 +27,8 @@ import { WebExceptionFilter } from './filters/web-exception.filter';
     ],
     providers: [
         // Registered globally rather than per-controller so the JSON API gets
-        // the same treatment: the interceptor only touches @Render() handlers,
-        // and the filter only redirects requests that asked for HTML.
+        // the same treatment: both only touch requests that asked for HTML,
+        // which is what separates a browser navigation from an API call.
         { provide: APP_INTERCEPTOR, useClass: ViewContextInterceptor },
         { provide: APP_FILTER, useClass: WebExceptionFilter },
     ],
